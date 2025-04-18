@@ -1,11 +1,10 @@
-# Use an official lightweight Python base image
 FROM python:3.11-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV ACCEPT_EULA=Y
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install OS-level dependencies
+# Install required system packages and ODBC dependencies
 RUN apt-get update && \
     apt-get install -y \
         curl \
@@ -14,25 +13,27 @@ RUN apt-get update && \
         unixodbc-dev \
         gcc \
         g++ && \
-    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && \
+    install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/ && \
     curl -sSL https://packages.microsoft.com/config/debian/11/prod.list -o /etc/apt/sources.list.d/mssql-release.list && \
     apt-get update && \
-    ACCEPT_EULA=Y apt-get install -y msodbcsql17 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get install -y msodbcsql17 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /microsoft.gpg
 
 # Set working directory
 WORKDIR /app
 
-# Copy all files
+# Copy files
 COPY . .
 
 # Install Python dependencies
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose port
 EXPOSE 8080
 
-# Start the Flask app with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+# Run the application with gunicorn
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8080"]
+
 
