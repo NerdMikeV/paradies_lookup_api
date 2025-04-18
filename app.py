@@ -100,9 +100,9 @@ def lookup_product():
 
 # 👇 Render uses port 8080 and needs production WSGI server
 if __name__ == "__main__":
-    from waitress import serve
-    print("🚀 Starting Flask server on port 8080")
-    serve(app, host="0.0.0.0", port=8080)
+    print("🚀 Starting Flask development server on port 8080")
+    app.run(debug=True, host="0.0.0.0", port=8080)
+
 
 
 
