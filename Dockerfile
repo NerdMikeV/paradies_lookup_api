@@ -1,39 +1,36 @@
+# Use official Python base image
 FROM python:3.11-slim
-
-# Set environment variables
-ENV ACCEPT_EULA=Y
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install required system packages and ODBC dependencies
-RUN apt-get update && \
-    apt-get install -y \
-        curl \
-        gnupg \
-        unixodbc \
-        unixodbc-dev \
-        gcc \
-        g++ && \
-    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && \
-    install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/ && \
-    curl -sSL https://packages.microsoft.com/config/debian/11/prod.list -o /etc/apt/sources.list.d/mssql-release.list && \
-    apt-get update && \
-    apt-get install -y msodbcsql17 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /microsoft.gpg
 
 # Set working directory
 WORKDIR /app
 
-# Copy files
-COPY . .
+# Install system packages
+RUN apt-get update && \
+    apt-get install -y \
+        curl \
+        gnupg \
+        gnupg2 \
+        unixodbc \
+        unixodbc-dev \
+        gcc \
+        g++ \
+        apt-transport-https \
+        ca-certificates && \
+    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
+    curl -sSL https://packages.microsoft.com/config/debian/11/prod.list -o /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && \
+    ACCEPT_EULA=Y apt-get install -y msodbcsql17 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port
-EXPOSE 8080
+# Copy app code
+COPY . .
 
-# Run the application with gunicorn
+# Run the app with gunicorn
 CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8080"]
 
 
