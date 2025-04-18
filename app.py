@@ -99,9 +99,13 @@ def lookup_product():
         return jsonify({"error": "Server error", "details": str(e)}), 500
 
 # 👇 Render uses port 8080 and needs production WSGI server
+import os
+
 if __name__ == "__main__":
-    print("🚀 Starting Flask development server on port 8080")
-    app.run(debug=True, host="0.0.0.0", port=8080)
+    port = int(os.environ.get("PORT", 8080))
+    print(f"🚀 Starting Flask server on http://0.0.0.0:{port}")
+    app.run(debug=True, host="0.0.0.0", port=port)
+
 
 
 
