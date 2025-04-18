@@ -1,22 +1,20 @@
-FROM python:3.11-slim
+FROM python:3.11-buster
 
-# Environment for Microsoft EULA
 ENV ACCEPT_EULA=Y
 
-# Install dependencies
+# Install Microsoft SQL Server ODBC driver and build dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y \
         curl \
-        gnupg2 \
-        ca-certificates \
-        apt-transport-https \
+        gnupg \
         unixodbc \
         unixodbc-dev \
         gcc \
         g++ \
-        libgssapi-krb5-2 && \
-    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null && \
-    curl -sSL https://packages.microsoft.com/config/debian/11/prod.list -o /etc/apt/sources.list.d/mssql-release.list && \
+        apt-transport-https \
+        ca-certificates && \
+    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
     apt-get update && \
     ACCEPT_EULA=Y apt-get install -y msodbcsql17 && \
     apt-get clean && \
@@ -30,9 +28,10 @@ COPY . /app
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-# Expose Flask app
+# Expose and launch
 EXPOSE 8080
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+
 
 
 
