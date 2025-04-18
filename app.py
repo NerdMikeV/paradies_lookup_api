@@ -1,15 +1,20 @@
 from flask import Flask, request, jsonify
-import pyodbc
+from flask_cors import CORS
 
+
+import pyodbc
+print(pyodbc.drivers())
 app = Flask(__name__)
+CORS(app)
 
 # SQL connection setup
 conn = pyodbc.connect(
     "DRIVER={ODBC Driver 17 for SQL Server};"
-    "SERVER=paradies-poc.database.windows.net;"
+    "SERVER=paradies-poc.database.windows.net,1433;"
     "DATABASE=Paradies PoC;"
     "UID=adminuser;"
     "PWD=Mlv105524;"
+    "Encrypt=no;"
     "TrustServerCertificate=yes;"
 )
 
